@@ -1,0 +1,13 @@
+venv
+result_pics
+.idea
+*.msh
+*.frd
+*.png
+*.geo
+*.cvg
+*.sta
+*.out
+*.inp
+*.dat
+*.pyc
