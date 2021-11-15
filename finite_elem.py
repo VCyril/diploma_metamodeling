@@ -1,5 +1,6 @@
-import sys
 import pycalculix as pyc
+import pycalculix.results_file
+import numpy as np
 
 ccx = '/usr/bin/ccx'
 cgx = '/usr/bin/cgx'
@@ -7,9 +8,41 @@ gmsh = '/home/cyril/.local/lib/python3.8/site-packages/gmsh-4.8.4-Linux64-sdk/bi
 model_name = 'model'
 
 
+def get_nodal_strain(self, fname='', display=True, levels=21, gradient=False,
+                     gmult=1.0, max_val=None, min_val=None, title=''):
+    sel = {}
+    sel['nodes'] = self.__problem.fea.view.nodes
+    sel['elements'] = self.__problem.fea.view.elements
+    sel['faces'] = self.__problem.fea.view.faces
+
+    # sort nodes low to high so index is correct
+    # we have index to id below so showing subsets works
+    sel['nodes'] = list(sel['nodes'])
+    sel['nodes'] = sorted(sel['nodes'], key=lambda k: k.id)
+    # store results at nodes
+
+    rx = []
+    yx = []
+    er = []
+    et = []
+
+    axials = []
+
+    id_to_ind = {}
+    for node in sel['nodes']:
+        id_to_ind[node.id] = len(axials)
+        rx.append(node.x)
+        yx.append(node.y)
+        axials.append(1)
+        er.append(self.__results[self.__time]['node'][node.id]['ex'])
+        et.append(self.__results[self.__time]['node'][node.id]['ez'])
+
+    return rx, yx, er, et
+
+
 def create_sensor_geometry():
     # We'll be modeling a rotating jet engine part
-    model = pyc.FeaModel(model_name)
+    model = pyc.FeaModel(model_name, ccx, cgx, gmsh)
     model.set_units('mm')
     show_gui = True
 
@@ -50,9 +83,9 @@ def create_sensor_geometry():
         [L, p1, p2] = part.draw_line_delta(drad, dax)
         lines.append(L)
 
-    # fillet_list = [[0, 1, 3], [5, 6, 3], [6, 7, 3]]
-    # for [i1, i2, rad] in fillet_list:
-    #     part.fillet_lines(lines[i1], lines[i2], rad)
+    fillet_list = [[0, 1, 3], [5, 6, 3], [6, 7, 3]]
+    for [i1, i2, rad] in fillet_list:
+        part.fillet_lines(lines[i1], lines[i2], rad)
 
     return model, part
 
@@ -95,14 +128,46 @@ def plot_elems_pressures_constraints(model, show_gui):
 
 
 def solve_problem(model):
-    mod = pyc.Problem(model, 'struct', 'problem')
-    mod.solve()
+    prob = pyc.Problem(model, 'struct', 'problem')
+    prob.solve()
+    # disp = True
+    # fields = 'S2'
+    # fields = fields.split(',')
+    # for field in fields:
+    #     fname = model_name + '_' + field
+    #     prob.rfile.nplot(field, fname, display=disp)
+    #
+    # model.view.print_summary()
 
-    disp = True
-    fields = 'S2'
-    fields = fields.split(',')
-    for field in fields:
-        fname = model_name + '_' + field
-        mod.rfile.nplot(field, fname, display=disp)
+    rx, yx, er, et = prob.rfile.get_nodal_strain()
 
-    model.view.print_summary()
+    # _, _, ur, _ = prob.rfile.get_nodal_strain()
+
+    rx = np.array(rx)
+    yx = np.array(yx)
+    er = np.array(er)
+    et = np.array(et)
+
+    # plt.scatter(rx, yx)
+
+    delta_r = 0.01e-3
+    delta_a = 0.01e-3
+
+    ir = 35
+    h_inner = 27
+
+    id_ = (rx <= ir) & (np.abs((yx - h_inner)) < delta_a)
+
+    id_2 = yx < delta_a
+
+    r_foot = rx[id_2]
+    y_foot = yx[id_2]
+
+    # plt.scatter(r_foot, ur[id_2])
+
+    rx = rx[id_]
+    yx = yx[id_]
+    er = er[id_]
+    et = et[id_]
+
+    return rx, er, et

@@ -1,5 +1,6 @@
 import parsing as pars
 import plotting as myplt
+import matplotlib.pyplot as plt
 import finite_elem as fin
 import converting_results as conv
 import sys
@@ -15,8 +16,27 @@ if error != None:
     sys.exit()
 
 fin.plot_elems_pressures_constraints(model, False)
-fin.solve_problem(model)
-#
+
+
+import time
+
+debu = time.time()
+
+rated_load = [10000, 20000, 30000, 40000, 50000]
+
+f = plt.figure()
+
+ax = f.add_subplot()
+
+rx, er, et = fin.solve_problem(model)
+ax.scatter(rx, er, color = 'black')
+# plt.plot(rx, er)
+plt.show()
+
+
+
+
+
 # list_of_nodes = pars.search_nodes_in_file("model.inp", "NSET=L6", "NSET=L7")
 # list_of_coords = pars.get_nodes_coordinates("model.inp", list_of_nodes)
 # list_of_strains = pars.get_ex_strain_for_nodes("problem.frd", list_of_nodes)
