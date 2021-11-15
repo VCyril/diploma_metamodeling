@@ -40,8 +40,8 @@ def create_sensor_geometry(ir=40, or_=50, r_groove=20, r_neck=10, t_shoulder=15,
     return model, part
 
 
-def set_loads_and_constraints(model, part):
-    model.set_load('press', part.right, 63661977)
+def set_loads_and_constraints(model, part, load):
+    model.set_load('press', part.right, load)
     model.set_constr('fix', part.bottom, 'x')
     model.set_constr('fix', part.left, 'y')
 
@@ -77,7 +77,7 @@ def plot_elems_pressures_constraints(model, show_gui):
     model.plot_constraints('constr')
 
 
-def solve_problem(model):
+def solve_problem(model, ir, h_inner):
     prob = pyc.Problem(model, 'struct', 'problem')
     prob.solve()
     # disp = True
@@ -98,26 +98,19 @@ def solve_problem(model):
     er = np.array(er)
     et = np.array(et)
 
-    # plt.scatter(rx, yx)
 
     delta_r = 0.01e-3
     delta_a = 0.01e-3
 
-    ir = 35
-    h_inner = 27
-
     id_ = (rx <= ir) & (np.abs((yx - h_inner)) < delta_a)
-
-    id_2 = yx < delta_a
-
-    r_foot = rx[id_2]
-    y_foot = yx[id_2]
-
-    # plt.scatter(r_foot, ur[id_2])
 
     rx = rx[id_]
     yx = yx[id_]
     er = er[id_]
     et = et[id_]
+
+    print(rx)
+    print(er)
+    print(et)
 
     return rx, er, et
