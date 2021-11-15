@@ -6,8 +6,8 @@ import converting_results as conv
 import sys
 
 model, part = fin.create_sensor_geometry()
-fin.set_loads_and_constraints(model, part)
 fin.plot_model_geometry(model, False)
+fin.set_loads_and_constraints(model, part)
 fin.set_mat_props(model, part)
 
 error = fin.set_elem_props(model, part, 'quad', 1)
@@ -29,12 +29,13 @@ f = plt.figure()
 ax = f.add_subplot()
 
 rx, er, et = fin.solve_problem(model)
-ax.scatter(rx, er, color = 'black')
-# plt.plot(rx, er)
+ax.scatter(rx, et, color = 'black')
 plt.show()
 
 
 
+
+# *************************************
 
 
 # list_of_nodes = pars.search_nodes_in_file("model.inp", "NSET=L6", "NSET=L7")
