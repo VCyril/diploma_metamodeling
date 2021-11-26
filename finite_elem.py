@@ -57,7 +57,7 @@ def plot_model_geometry(model, show_gui):
 
 def set_mat_props(model, part):
     mat = model.make_matl('steel')
-    mat.set_mech_props(7800, 210 * (10 ** 9), 0.3)
+    mat.set_mech_props(7800, 200e5, 0.3)
     model.set_matl(mat, part)
 
 
@@ -109,8 +109,6 @@ def solve_problem(model, ir, h_inner):
     er = er[id_]
     et = et[id_]
 
-    print(rx)
-    print(er)
-    print(et)
+    rx = rx / ir
 
     return rx, er, et
