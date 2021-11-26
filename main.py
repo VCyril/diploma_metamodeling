@@ -22,7 +22,7 @@ VAR_RANGE_COEF = 0.05
 VAR_UPPER = 1 + VAR_RANGE_COEF
 VAR_LOWER = 1 - VAR_RANGE_COEF
 
-SAMPLES_NUM = 10
+SAMPLES_NUM = 2
 
 
 def create_samples(samples_num):
