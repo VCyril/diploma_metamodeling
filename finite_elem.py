@@ -35,15 +35,29 @@ def create_sensor_geometry(ir=40, or_=50, r_groove=20, r_neck=10, t_shoulder=15,
 
     fillet_list = [[0, 1, 3], [5, 6, 3], [6, 7, 3]]
     for [i1, i2, rad] in fillet_list:
-        part.fillet_lines(lines[i1], lines[i2], rad)
-
-    return model, part
+        try:
+            part.fillet_lines(lines[i1], lines[i2], rad)
+        except Exception as excp:
+            return None, None, str(excp)
+    return model, part, None
 
 
 def set_loads_and_constraints(model, part, load):
-    model.set_load('press', part.right, load)
-    model.set_constr('fix', part.bottom, 'x')
-    model.set_constr('fix', part.left, 'y')
+    try:
+        model.set_load('press', part.right, load)
+    except Exception as excp:
+        return str(excp)
+
+    try:
+        model.set_constr('fix', part.bottom, 'x')
+    except Exception as excp:
+        return str(excp)
+
+    try:
+        model.set_constr('fix', part.left, 'y')
+    except Exception as excp:
+        return str(excp)
+    return None
 
 
 def plot_model_geometry(model, show_gui):
@@ -80,24 +94,13 @@ def plot_elems_pressures_constraints(model, show_gui):
 def solve_problem(model, ir, h_inner):
     prob = pyc.Problem(model, 'struct', 'problem')
     prob.solve()
-    # disp = True
-    # fields = 'S2'
-    # fields = fields.split(',')
-    # for field in fields:
-    #     fname = model_name + '_' + field
-    #     prob.rfile.nplot(field, fname, display=disp)
-    #
-    # model.view.print_summary()
 
     rx, yx, er, et = prob.rfile.get_nodal_strain()
-
-    # _, _, ur, _ = prob.rfile.get_nodal_strain()
 
     rx = np.array(rx)
     yx = np.array(yx)
     er = np.array(er)
     et = np.array(et)
-
 
     delta_r = 0.01e-3
     delta_a = 0.01e-3

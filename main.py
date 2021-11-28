@@ -18,11 +18,13 @@ H_GROOVE = 30
 H_NECK = 40
 H = 50
 
-VAR_RANGE_COEF = 0.05
+LOAD = 10000
+
+VAR_RANGE_COEF = 0.2
 VAR_UPPER = 1 + VAR_RANGE_COEF
 VAR_LOWER = 1 - VAR_RANGE_COEF
 
-SAMPLES_NUM = 2
+SAMPLES_NUM = 20
 
 
 def create_samples(samples_num):
@@ -56,16 +58,24 @@ def create_samples(samples_num):
 
 def run_simulation(_ir, _or, _r_groove, _r_neck, _t_shoulder, _h_inner, _h_shoulder, _h_groove, _h_neck, _h,
                    load):
-    model, part = fin.create_sensor_geometry(_ir, _or, _r_groove, _r_neck, _t_shoulder,
-                                             _h_inner, _h_shoulder, _h_groove, _h_neck, _h)
+    model, part, error = fin.create_sensor_geometry(_ir, _or, _r_groove, _r_neck, _t_shoulder,
+                                                    _h_inner, _h_shoulder, _h_groove, _h_neck, _h)
+    if error is not None:
+        print(error)
+        return None
+
     fin.plot_model_geometry(model, False)
-    fin.set_loads_and_constraints(model, part, load / (3.1415 * _r_neck ** 2))
+    error = fin.set_loads_and_constraints(model, part, load / (3.1415 * _r_neck ** 2))
+    if error is not None:
+        print(error)
+        return None
+
     fin.set_mat_props(model, part)
 
     error = fin.set_elem_props(model, part, 'quad', 1)  # set 0.2
-    if error != None:
+    if error is not None:
         print(error)
-        sys.exit()
+        return None
 
     # fin.plot_elems_pressures_constraints(model, False)
 
@@ -78,21 +88,6 @@ def run_simulation(_ir, _or, _r_groove, _r_neck, _t_shoulder, _h_inner, _h_shoul
     # ax.scatter(rx, et, color='blue')
     #
     # plt.show()
-
-    n = len(rx)
-    # result = {'ir': [_ir] * n,
-    #           'or': [_or] * n,
-    #           'r_groove': [_r_groove] * n,
-    #           'r_neck': [_r_neck] * n,
-    #           't_shoulder': [_t_shoulder] * n,
-    #           'h_inner': [_h_inner] * n,
-    #           'h_shoulder': [_h_shoulder] * n,
-    #           'h_groove': [_h_groove] * n,
-    #           'h_neck': [_h_neck] * n,
-    #           'h': [_h] * n,
-    #           'rx': rx,
-    #           'er': er,
-    #           'et': et}
 
     result = {'ir': _ir,
               'or': _or,
@@ -111,20 +106,18 @@ def run_simulation(_ir, _or, _r_groove, _r_neck, _t_shoulder, _h_inner, _h_shoul
     return result
 
 
-rated_load = [10000, 20000, 30000, 40000, 50000]
-
 geom_samples = create_samples(SAMPLES_NUM)
 
-# i = 0
-# result = run_simulation(samples[i][0], samples[i][1], samples[i][2], samples[i][3],
-#                         samples[i][4], samples[i][5], samples[i][6], samples[i][7],
-#                         samples[i][8], samples[i][9], rated_load[0])
 sim_results = []
 
 for i in range(SAMPLES_NUM):
     res = run_simulation(geom_samples[i][0], geom_samples[i][1], geom_samples[i][2], geom_samples[i][3],
                          geom_samples[i][4], geom_samples[i][5], geom_samples[i][6], geom_samples[i][7],
-                         geom_samples[i][8], geom_samples[i][9], rated_load[0])
+                         geom_samples[i][8], geom_samples[i][9], LOAD)
+    if res is None:
+        continue
     sim_results.append(res)
 
-mlp.create_model_and_fit(sim_results)
+print("Simulation results:")
+print(sim_results)
+# mlp.create_model_and_fit(sim_results)
