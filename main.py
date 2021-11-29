@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pyDOE as doe
+import pandas as pd
 import sys
 
 import finite_elem as fin
@@ -20,12 +21,13 @@ H = 50
 
 LOAD = 10000
 
-VAR_RANGE_COEF = 0.2
+VAR_RANGE_COEF = 0.05
 VAR_UPPER = 1 + VAR_RANGE_COEF
 VAR_LOWER = 1 - VAR_RANGE_COEF
 
 SAMPLES_NUM = 20
 
+SIM_RESULT_FNAME = 'sim_results.csv'
 
 def create_samples(samples_num):
     var_lower = np.array([IR * VAR_LOWER,
@@ -64,7 +66,7 @@ def run_simulation(_ir, _or, _r_groove, _r_neck, _t_shoulder, _h_inner, _h_shoul
         print(error)
         return None
 
-    fin.plot_model_geometry(model, False)
+    # fin.plot_model_geometry(model, False)
     error = fin.set_loads_and_constraints(model, part, load / (3.1415 * _r_neck ** 2))
     if error is not None:
         print(error)
@@ -79,29 +81,28 @@ def run_simulation(_ir, _or, _r_groove, _r_neck, _t_shoulder, _h_inner, _h_shoul
 
     # fin.plot_elems_pressures_constraints(model, False)
 
-    f = plt.figure()
+    # f = plt.figure()
+    #
+    # ax = f.add_subplot()
 
-    ax = f.add_subplot()
-
-    rx, er, et = fin.solve_problem(model, _ir, _h_inner)
+    rx, er, _ = fin.solve_problem(model, _ir, _h_inner)
     # ax.scatter(rx, er, color='black')
     # ax.scatter(rx, et, color='blue')
     #
     # plt.show()
-
-    result = {'ir': _ir,
-              'or': _or,
-              'r_groove': _r_groove,
-              'r_neck': _r_neck,
-              't_shoulder': _t_shoulder,
-              'h_inner': _h_inner,
-              'h_shoulder': _h_shoulder,
-              'h_groove': _h_groove,
-              'h_neck': _h_neck,
-              'h': _h,
+    n = len(rx)
+    result = {'ir': [_ir] * n,
+              'or': [_or] * n,
+              'r_groove': [_r_groove] * n,
+              'r_neck': [_r_neck] * n,
+              't_shoulder': [_t_shoulder] * n,
+              'h_inner': [_h_inner] * n,
+              'h_shoulder': [_h_shoulder] * n,
+              'h_groove': [_h_groove] * n,
+              'h_neck': [_h_neck] * n,
+              'h': [_h] * n,
               'rx': rx,
-              'er': er,
-              'et': et}
+              'er': er}
 
     return result
 
@@ -110,14 +111,26 @@ geom_samples = create_samples(SAMPLES_NUM)
 
 sim_results = []
 
+with open(SIM_RESULT_FNAME, 'w') as f:
+    pass
+
 for i in range(SAMPLES_NUM):
     res = run_simulation(geom_samples[i][0], geom_samples[i][1], geom_samples[i][2], geom_samples[i][3],
                          geom_samples[i][4], geom_samples[i][5], geom_samples[i][6], geom_samples[i][7],
                          geom_samples[i][8], geom_samples[i][9], LOAD)
     if res is None:
         continue
-    sim_results.append(res)
+    df = pd.DataFrame(res)
+    if i == 0:
+        df.to_csv(SIM_RESULT_FNAME, mode='a', index=False)
+    else:
+        df.to_csv(SIM_RESULT_FNAME, mode='a', header=False, index=False)
+    # with pd.ExcelWriter("sim_results.csv", mode="a") as writer:
+    #     df.to_csv(writer)
+    # print(df)
+    # sim_results.append(res)
 
 print("Simulation results:")
-print(sim_results)
-# mlp.create_model_and_fit(sim_results)
+# print(sim_results)
+# mlp.read_from_csv(SIM_RESULT_FNAME)
+mlp.create_model_and_fit(SIM_RESULT_FNAME)

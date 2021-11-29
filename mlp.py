@@ -4,9 +4,13 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import sklearn.metrics
 import optuna
+import pandas as pd
 
 # loss_tracker = keras.metrics.Mean(name="loss")
 # mae_metric = keras.metrics.MeanAbsoluteError(name="mae")
+
+columns_x = ['ir', 'or', 'r_groove', 'r_neck', 't_shoulder', 'h_inner',
+             'h_shoulder', 'h_groove', 'h_neck', 'h', 'rx']
 
 
 def transform_sim_results(samples):
@@ -30,6 +34,15 @@ def transform_sim_results(samples):
     Y = np.asarray(Y)
 
     return X, Y
+
+
+def read_from_csv(res_fname):
+    df = pd.read_csv(res_fname)
+    x = df[columns_x].to_numpy()
+    y = df['er'].to_numpy()
+    print(x)
+    print(y)
+    return x, y
 
 
 def get_best_parameters(X, Y):
@@ -73,9 +86,9 @@ def get_best_parameters(X, Y):
     return trial.params
 
 
-def create_model_and_fit(samples):
-    x, y = transform_sim_results(samples)
-
+def create_model_and_fit(res_fname):
+    # x, y = transform_sim_results(samples)
+    x, y = read_from_csv(res_fname)
     trial_results = get_best_parameters(x, y)
 
     model = keras.Sequential()
