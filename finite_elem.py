@@ -71,11 +71,11 @@ def plot_model_geometry(model, show_gui):
 
 def set_mat_props(model, part):
     mat = model.make_matl('steel')
-    mat.set_mech_props(7800, 200e5, 0.3)
+    mat.set_mech_props(7800, 2e5, 0.3)
     model.set_matl(mat, part)
 
 
-def set_elem_props(model, part, elem_shape, elem_size):
+def set_elem_props(model, elem_shape, elem_size):
     model.set_eshape(elem_shape, 2)
     model.set_etype('axisym', 'A0')
     try:
@@ -114,4 +114,8 @@ def solve_problem(model, ir, h_inner):
 
     rx = rx / ir
 
-    return rx, er, et
+    # seqv = max(abs(prob.rfile.get_nmax('Seqv')), abs(prob.rfile.get_nmin('Seqv')))
+    er_max = max(abs(max(er)), abs(min(er)))
+    seqv = er_max * 2e5
+    return rx, er, et, seqv
+
