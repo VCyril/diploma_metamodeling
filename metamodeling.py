@@ -17,8 +17,10 @@ N_TRIALS = 3
 model_categories = ['CatBoost']
 x_cols = ['ir', 'or', 'r_groove', 'r_neck', 't_shoulder', 'h_inner',
           'h_shoulder', 'h_groove', 'h_neck', 'h', 'rx']
-er_col = 'er'
-sx_col = 'sx_max'
+# er_col = 'er'
+er_col = 'mapp'
+# sx_col = 'sx_max'
+sx_col = 'low_pred'
 models_folder = 'saved_models'
 
 
@@ -120,9 +122,9 @@ def get_best_parameters(X, Y, y_name):
     return trial.params, trial.number
 
 
-def create_model_and_fit(res_fname):
+def create_model_and_fit(res_fname, model_name):
     x, er, sx_max = read_from_csv(res_fname)
-    trial_results, trial_number = get_best_parameters(x, er, er_col)
+    trial_results, trial_number = get_best_parameters(x, er, model_name)
     # model = getattr(mod, 'make_' + trial_results['model_category'])(trial_results)
 
     x_train, x_test, y_train, y_test = train_test_split(x, er, test_size=0.2, random_state=RANDOM_STATE)

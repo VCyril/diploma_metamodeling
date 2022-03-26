@@ -78,8 +78,9 @@ def set_mat_props(model, part):
 def set_elem_props(model, elem_shape, elem_size):
     model.set_eshape(elem_shape, 2)
     model.set_etype('axisym', 'A0')
+    model.get_item('L0').set_ediv(50)
     try:
-        model.mesh(elem_size, 'fineness', 'gmsh')
+        model.mesh(size=elem_size, meshmode='fineness', mesher='gmsh')
     except Exception as excp:
         return str(excp)
     return None
@@ -87,8 +88,8 @@ def set_elem_props(model, elem_shape, elem_size):
 
 def plot_elems_pressures_constraints(model, show_gui):
     model.plot_elements(display=show_gui)
-    model.plot_pressures('press')
-    model.plot_constraints('constr')
+    model.plot_pressures('press', show_gui)
+    model.plot_constraints('constr', show_gui)
 
 
 def solve_problem(model, ir, h_inner):
